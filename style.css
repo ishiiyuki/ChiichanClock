@@ -25,7 +25,7 @@ body::-webkit-scrollbar {
   display: none;
 }
 
-/* スマホ（タッチ端末）では縦スクロールを許可し、上スワイプでブラウザ下部UIバーを隠せるようにする */
+/* スマホ（タッチ端末）では縦スクロール余白を持たせ、上スワイプでブラウザ下部UIバーを隠せるようにする */
 @media (hover: none) and (pointer: coarse) {
   html,
   body {
@@ -58,7 +58,7 @@ body::-webkit-scrollbar {
   }
 }
 
-/* メイン縦画面コンテナ（スマホでは画面固定で背景・時計をキープ） */
+/* メイン画面コンテナ（スマホでは画面固定で背景・時計をキープ） */
 .app-container {
   position: fixed;
   top: 0;
@@ -74,9 +74,9 @@ body::-webkit-scrollbar {
   pointer-events: none;
 }
 
-/* PCなどの大画面ブラウザで開いた場合はスマホ縦画面比率(9:16)で中央表示 */
+/* PCなどの大画面ブラウザで開いた場合：ウィンドウの縦横比に応じて9:16または16:9で表示 */
 @media (hover: hover) and (pointer: fine) and (min-width: 600px) {
-  .app-container {
+  .app-container[data-orientation="portrait"] {
     position: relative;
     width: min(100vw, calc(100dvh * 9 / 16));
     height: 100dvh;
@@ -84,44 +84,14 @@ body::-webkit-scrollbar {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12);
     pointer-events: auto;
   }
-}
 
-/*
- * スマホを横向きにした際、ブラウザ側が自動回転しても
- * 画面が回転しないように逆回転して縦向きを維持するスタイル
- */
-.app-container.counter-rotate-left {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 100dvh;
-  height: 100vw;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  transform-origin: center center;
-  border-radius: 0;
-}
-
-.app-container.counter-rotate-right {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 100dvh;
-  height: 100vw;
-  transform: translate(-50%, -50%) rotate(90deg);
-  transform-origin: center center;
-  border-radius: 0;
-}
-
-/* CSSメディアクリによるフォールバック（JS判定前の横向き対策） */
-@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
-  .app-container:not(.counter-rotate-left):not(.counter-rotate-right) {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 100dvh;
-    height: 100vw;
-    transform: translate(-50%, -50%) rotate(-90deg);
-    transform-origin: center center;
+  .app-container[data-orientation="landscape"] {
+    position: relative;
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100vw * 9 / 16));
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    pointer-events: auto;
   }
 }
 
@@ -144,6 +114,7 @@ body::-webkit-scrollbar {
   transform: scale(1.02);
 }
 
+/* 縦向き（ポートレート）用の背景画像 */
 .bg-asa {
   background-image: url('image/asa.jpg');
 }
@@ -154,6 +125,41 @@ body::-webkit-scrollbar {
 
 .bg-yoru {
   background-image: url('image/yoru.jpg');
+}
+
+/* 横向き（ランドスケープ）用の背景画像 */
+.app-container[data-orientation="landscape"] .bg-image {
+  background-position: center center;
+}
+
+.app-container[data-orientation="landscape"] .bg-asa {
+  background-image: url('image/asa_yoko.jpg');
+}
+
+.app-container[data-orientation="landscape"] .bg-hiru {
+  background-image: url('image/hiru_yoko.jpg');
+}
+
+.app-container[data-orientation="landscape"] .bg-yoru {
+  background-image: url('image/yoru_yoko.jpg');
+}
+
+@media (orientation: landscape) {
+  .bg-image {
+    background-position: center center;
+  }
+
+  .bg-asa {
+    background-image: url('image/asa_yoko.jpg');
+  }
+
+  .bg-hiru {
+    background-image: url('image/hiru_yoko.jpg');
+  }
+
+  .bg-yoru {
+    background-image: url('image/yoru_yoko.jpg');
+  }
 }
 
 /* 現在の時間帯に応じた背景表示 */
@@ -181,7 +187,7 @@ body::-webkit-scrollbar {
   position: relative;
   z-index: 10;
   width: 100%;
-  padding: 0 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 0 calc(20px + env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
   display: flex;
   justify-content: center;
 }
@@ -202,7 +208,19 @@ body::-webkit-scrollbar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: background 0.6s ease, border-color 0.6s ease, opacity 0.35s ease, transform 0.35s ease;
+  transition: background 0.6s ease, border-color 0.6s ease, padding 0.3s ease, max-width 0.3s ease;
+}
+
+/* 横向き時はキャラクターの顔と重ならないよう左下にコンパクト配置 */
+.app-container[data-orientation="landscape"] .clock-wrapper {
+  justify-content: flex-start;
+  padding: 0 calc(24px + env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) calc(24px + env(safe-area-inset-left, 0px));
+}
+
+.app-container[data-orientation="landscape"] .clock-card {
+  max-width: 310px;
+  padding: 14px 20px 16px;
+  border-radius: 22px;
 }
 
 /* 時間帯ごとの半透明UIカラーニュアンス */
@@ -314,6 +332,14 @@ body::-webkit-scrollbar {
   min-width: 2.1ch;
 }
 
+.app-container[data-orientation="landscape"] .time-hm {
+  font-size: clamp(2.6rem, 6.5vw, 3.3rem);
+}
+
+.app-container[data-orientation="landscape"] .time-sec {
+  font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+}
+
 /* 日付・曜日表示 */
 .date-display {
   font-size: 0.92rem;
@@ -321,6 +347,10 @@ body::-webkit-scrollbar {
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.85);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.app-container[data-orientation="landscape"] .date-display {
+  font-size: 0.82rem;
 }
 
 /* トースト通知（iOS等のフルスクリーン非対応ブラウザ向け案内） */
@@ -352,4 +382,3 @@ body::-webkit-scrollbar {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-

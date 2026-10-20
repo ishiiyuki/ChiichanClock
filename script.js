@@ -18,18 +18,32 @@
     night:   { icon: '🌙', label: 'NIGHT' }
   };
 
+  // 縦・横すべての背景画像をプリロードして回転時のチラつきを防止
+  const IMAGE_PATHS = [
+    'image/asa.jpg',
+    'image/hiru.jpg',
+    'image/yoru.jpg',
+    'image/asa_yoko.jpg',
+    'image/hiru_yoko.jpg',
+    'image/yoru_yoko.jpg'
+  ];
+  IMAGE_PATHS.forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+
   // モード切替順序: auto -> morning -> daytime -> night -> auto
   const MODES = ['auto', 'morning', 'daytime', 'night'];
   let currentModeIndex = 0;
 
   function getPeriodByHour(hour) {
     if (hour >= 5 && hour < 11) {
-      return 'morning'; // image/asa.jpg
+      return 'morning'; // 縦: asa.jpg / 横: asa_yoko.jpg
     }
     if (hour >= 11 && hour < 17) {
-      return 'daytime'; // image/hiru.jpg
+      return 'daytime'; // 縦: hiru.jpg / 横: hiru_yoko.jpg
     }
-    return 'night'; // image/yoru.jpg
+    return 'night'; // 縦: yoru.jpg / 横: yoru_yoko.jpg
   }
 
   function pad2(num) {
@@ -67,48 +81,22 @@
     modeTag.classList.toggle('is-manual', !isAuto);
   }
 
+  // 端末の向き（縦 / 横）を検知して data-orientation を更新
+  function updateOrientation() {
+    let isLandscape = false;
+    if (window.matchMedia('(orientation: landscape)').matches) {
+      isLandscape = true;
+    } else if (window.innerWidth > window.innerHeight) {
+      isLandscape = true;
+    }
+    app.dataset.orientation = isLandscape ? 'landscape' : 'portrait';
+  }
+
   // 時間帯バッジタップで AUTO -> 朝 -> 昼 -> 夜 を切り替え可能にする
   periodToggleBtn.addEventListener('click', () => {
     currentModeIndex = (currentModeIndex + 1) % MODES.length;
     updateClock();
   });
-
-  // 縦画面固定処理（Screen Orientation Lock API + 逆回転フォールバック）
-  async function tryLockPortrait() {
-    if (screen.orientation && typeof screen.orientation.lock === 'function') {
-      try {
-        await screen.orientation.lock('portrait-primary');
-      } catch (_) {
-        // ブラウザの制限（非フルスクリーン時など）でロックできない場合はCSS逆回転で対応
-      }
-    }
-  }
-
-  function updateCounterRotation() {
-    const isMobileOrTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    if (!isMobileOrTouch) {
-      app.classList.remove('counter-rotate-left', 'counter-rotate-right');
-      return;
-    }
-
-    let angle = 0;
-    if (screen.orientation && typeof screen.orientation.angle === 'number') {
-      angle = screen.orientation.angle;
-    } else if (typeof window.orientation === 'number') {
-      angle = window.orientation;
-    } else if (window.innerWidth > window.innerHeight) {
-      angle = 90;
-    }
-
-    app.classList.remove('counter-rotate-left', 'counter-rotate-right');
-
-    // スマホを横に傾けてブラウザが90度または270度(-90度)回転した場合、逆回転して縦向きを維持
-    if (angle === 90) {
-      app.classList.add('counter-rotate-left');
-    } else if (angle === 270 || angle === -90) {
-      app.classList.add('counter-rotate-right');
-    }
-  }
 
   // トースト通知表示
   let toastTimer = null;
@@ -128,7 +116,7 @@
     }, 4000);
   }
 
-  // フルスクリーン＆縦画面ロックボタン
+  // フルスクリーンボタン
   fullscreenBtn.addEventListener('click', async () => {
     const docEl = document.documentElement;
     const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
@@ -144,7 +132,6 @@
     try {
       if (!isFullscreen) {
         await requestFS.call(docEl, { navigationUI: 'hide' });
-        await tryLockPortrait();
       } else if (exitFS) {
         await exitFS.call(document);
       }
@@ -169,25 +156,29 @@
     if (document.visibilityState === 'visible') {
       requestWakeLock();
       updateClock();
+      updateOrientation();
     }
   });
 
-  if (screen.orientation) {
-    screen.orientation.addEventListener('change', updateCounterRotation);
+  const landscapeMql = window.matchMedia('(orientation: landscape)');
+  if (typeof landscapeMql.addEventListener === 'function') {
+    landscapeMql.addEventListener('change', updateOrientation);
   }
-  window.addEventListener('orientationchange', updateCounterRotation);
-  window.addEventListener('resize', updateCounterRotation);
+  if (screen.orientation) {
+    screen.orientation.addEventListener('change', updateOrientation);
+  }
+  window.addEventListener('orientationchange', updateOrientation);
+  window.addEventListener('resize', updateOrientation);
 
-  // 初回タッチ時に縦固定・スリープ防止を有効化試行
+  // 初回タッチ時にスリープ防止を有効化試行
   document.addEventListener('pointerdown', () => {
-    tryLockPortrait();
     if (!wakeLock) {
       requestWakeLock();
     }
   }, { once: true });
 
   // 初期化
-  updateCounterRotation();
+  updateOrientation();
   updateClock();
   requestWakeLock();
   setInterval(updateClock, 250);
