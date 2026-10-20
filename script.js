@@ -110,17 +110,46 @@
     }
   }
 
+  // トースト通知表示
+  let toastTimer = null;
+  function showToast(message) {
+    let toast = document.getElementById('toastMsg');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toastMsg';
+      toast.className = 'toast-msg';
+      app.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('is-visible');
+    }, 4000);
+  }
+
   // フルスクリーン＆縦画面ロックボタン
   fullscreenBtn.addEventListener('click', async () => {
+    const docEl = document.documentElement;
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+    const exitFS = document.exitFullscreen || document.webkitExitFullscreen;
+
+    if (!requestFS) {
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+      showToast('画面を指で少し上にスワイプすると下のバーが消えます（完全に全画面にするには共有メニューから「ホーム画面に追加」してください）');
+      return;
+    }
+
     try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
+      if (!isFullscreen) {
+        await requestFS.call(docEl, { navigationUI: 'hide' });
         await tryLockPortrait();
-      } else {
-        await document.exitFullscreen();
+      } else if (exitFS) {
+        await exitFS.call(document);
       }
     } catch (_) {
-      // iOS SafariなどFullscreen API非対応環境用
+      showToast('このブラウザ環境では全画面化が制限されています。「ホーム画面に追加」から起動すると全画面で表示できます。');
     }
   });
 
