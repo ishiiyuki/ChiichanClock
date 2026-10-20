@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0d0f17" />
+  <title>Chiichan Clock</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app" class="app-container" data-period="night">
+    <!-- 背景画像レイヤー（クロスフェード対応） -->
+    <div class="bg-layer">
+      <div class="bg-image bg-asa" role="img" aria-label="朝の背景"></div>
+      <div class="bg-image bg-hiru" role="img" aria-label="昼の背景"></div>
+      <div class="bg-image bg-yoru" role="img" aria-label="夜の背景"></div>
+      <div class="bg-vignette"></div>
+    </div>
+
+    <!-- 半透明デジタル時計UI -->
+    <section class="clock-wrapper" aria-label="デジタル時計">
+      <div class="clock-card" id="clockCard">
+        <div class="card-header">
+          <button type="button" class="period-badge" id="periodToggleBtn" title="タップで時間帯モード切替（自動 / 朝 / 昼 / 夜）">
+            <span class="period-icon" id="periodIcon">🌙</span>
+            <span class="period-text" id="periodText">NIGHT</span>
+            <span class="mode-tag" id="modeTag">AUTO</span>
+          </button>
+
+          <button type="button" class="icon-btn" id="fullscreenBtn" title="フルスクリーン＆縦固定">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="time-display">
+          <span class="time-hm" id="timeHM">00:00</span>
+          <span class="time-sec" id="timeSec">00</span>
+        </div>
+
+        <div class="date-display" id="dateDisplay">
+          2026.10.20 (TUE)
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #08090e;
+  font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  color: #ffffff;
+  touch-action: manipulation;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* メイン縦画面コンテナ */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-color: #11131a;
+}
+
+/* PCなどの大画面ブラウザで開いた場合はスマホ縦画面比率(9:16)で中央表示 */
+@media (hover: hover) and (pointer: fine) and (min-width: 600px) {
+  .app-container {
+    width: min(100vw, calc(100dvh * 9 / 16));
+    height: 100dvh;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+}
+
+/*
+ * スマホを横向きにした際、ブラウザ側が自動回転しても
+ * 画面が回転しないように逆回転して縦向きを維持するスタイル
+ */
+.app-container.counter-rotate-left {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100dvh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center center;
+  border-radius: 0;
+}
+
+.app-container.counter-rotate-right {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100dvh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+  border-radius: 0;
+}
+
+/* CSSメディアクリによるフォールバック（JS判定前の横向き対策） */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .app-container:not(.counter-rotate-left):not(.counter-rotate-right) {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100dvh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center center;
+  }
+}
+
+/* 背景レイヤー */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.bg-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1), transform 8s ease-out;
+  transform: scale(1.02);
+}
+
+.bg-asa {
+  background-image: url('image/asa.jpg');
+}
+
+.bg-hiru {
+  background-image: url('image/hiru.jpg');
+}
+
+.bg-yoru {
+  background-image: url('image/yoru.jpg');
+}
+
+/* 現在の時間帯に応じた背景表示 */
+.app-container[data-period="morning"] .bg-asa,
+.app-container[data-period="daytime"] .bg-hiru,
+.app-container[data-period="night"] .bg-yoru {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 下部UIの視認性を高めるほんのりグラデーション */
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+/* 時計UIラッパー */
+.clock-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  padding: 0 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  justify-content: center;
+}
+
+/* 半透明グラスモーフィズムカード */
+.clock-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 20px 24px 22px;
+  border-radius: 26px;
+  background: rgba(18, 22, 32, 0.48);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 0.6s ease, border-color 0.6s ease, opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* 時間帯ごとの半透明UIカラーニュアンス */
+.app-container[data-period="morning"] .clock-card {
+  background: rgba(32, 28, 26, 0.46);
+  border-color: rgba(255, 240, 220, 0.3);
+}
+
+.app-container[data-period="daytime"] .clock-card {
+  background: rgba(16, 32, 48, 0.44);
+  border-color: rgba(220, 245, 255, 0.35);
+}
+
+.app-container[data-period="night"] .clock-card {
+  background: rgba(15, 14, 28, 0.54);
+  border-color: rgba(235, 210, 255, 0.26);
+}
+
+/* カード上部（時間帯バッジ＆フルスクリーンボタン） */
+.card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.period-badge {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.period-badge:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.mode-tag {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.04em;
+}
+
+.mode-tag.is-manual {
+  background: rgba(255, 196, 107, 0.35);
+  color: #ffe7ba;
+}
+
+.icon-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* デジタル時計メイン表示 */
+.time-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+  margin: 4px 0 8px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.time-hm {
+  font-size: clamp(3.4rem, 15vw, 4.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.time-sec {
+  font-size: clamp(1.35rem, 5.5vw, 1.75rem);
+  font-weight: 600;
+  margin-left: 8px;
+  color: rgba(255, 255, 255, 0.82);
+  min-width: 2.1ch;
+}
+
+/* 日付・曜日表示 */
+.date-display {
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Chiichan Clock",
+  "short_name": "ChiichanClock",
+  "description": "時間帯で背景が変わる縦画面専用デジタル時計アプリ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f17",
+  "theme_color": "#0d0f17",
+  "icons": [
+    {
+      "src": "image/asa.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
